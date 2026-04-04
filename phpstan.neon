@@ -4,3 +4,7 @@ parameters:
         - src
     excludePaths:
         - src/vendor/*
+
+services:
+    errorFormatter.sarif:
+        class: PHPStanSarifErrorFormatter\SarifErrorFormatter
