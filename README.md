@@ -1,3 +1,16 @@
+## Out of date read-me
+
+todo:
+ - OIDC db sync
+ - Update readme
+ - Remove or use `settings.php` for something
+ - Remove user deletion logic fully (rely on OIDC)
+ - Finish and migrate to `users/action.php`
+ - Remove auth specific fields / tables from DB schema
+ - Assess if entrypoint is even needed
+ - Remove "not in use" comment from `docker.php`
+ - Fix nginx
+
 # Dockyard
 
 A dead-simple, super-lightweight PHP + SQLite web UI for managing Docker containers. It does one thing well: let you view container logs and start/stop containers with per-user permissions and minimal ops overhead.
