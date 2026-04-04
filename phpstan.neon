@@ -5,8 +5,3 @@ parameters:
     excludePaths:
         - src/vendor/*
 
-services:
-    errorFormatter.sarif:
-        class: PHPStanSarifErrorFormatter\SarifErrorFormatter
-        arguments:
-            currentWorkingDirectory: %currentWorkingDirectory%
