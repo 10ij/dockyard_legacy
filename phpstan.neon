@@ -8,3 +8,5 @@ parameters:
 services:
     errorFormatter.sarif:
         class: PHPStanSarifErrorFormatter\SarifErrorFormatter
+        arguments:
+            currentWorkingDirectory: %currentWorkingDirectory%
