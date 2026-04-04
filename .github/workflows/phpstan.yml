@@ -7,32 +7,20 @@ on:
 jobs:
   phpstan:
     runs-on: ubuntu-latest
-
     permissions:
       contents: read
-      security-events: write
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
+        
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.1'
           tools: composer
-
+          
       - name: Install dependencies
         run: composer install --no-progress --no-interaction --prefer-dist
-
-      - name: Install PHPStan SARIF extension
-        run: composer require --dev jbelien/phpstan-sarif-formatter 
-              
+        
       - name: Run PHPStan
-        run: src/vendor/bin/phpstan analyse --error-format=sarif > phpstan-results.sarif
-        continue-on-error: true
-
-      - name: Upload PHPStan results to GitHub
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: phpstan-results.sarif
+        run: src/vendor/bin/phpstan analyse src
