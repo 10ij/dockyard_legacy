@@ -1,0 +1,16 @@
+version: "3.8"
+
+services:
+  dockyard:
+    image: ghcr.io/10ij/dockyard:v1.0.1
+    ports:
+      - "8080:80"
+    env_file:
+      - .env
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - dockyard-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  dockyard-data:
