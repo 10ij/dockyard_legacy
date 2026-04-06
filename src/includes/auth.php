@@ -28,45 +28,47 @@ if (isset($_SESSION['LAST_ACTIVITY']) && (time() - $_SESSION['LAST_ACTIVITY'] > 
 
 /**
  * Upsert??? local user from OIDC identity
- * Admin is always taken from OIDC group membership
+ * OIDC is the source of truth
  */
-function sync_oidc_user(PDO $db, string $username, ?string $email, bool $oidcIsAdmin): array {
-    $stmt = $db->prepare('SELECT ID, username, email, IsAdmin FROM users WHERE username = :username LIMIT 1');
-    $stmt->bindValue(':username', $username, PDO::PARAM_STR);
+function sync_oidc_user(PDO $db, string $oidcSub, string $username, ?string $email, bool $oidcIsAdmin): array {
+    $stmt = $db->prepare('SELECT ID, oidc_sub, username, email, IsAdmin FROM users WHERE oidc_sub = :oidc_sub LIMIT 1');
+    $stmt->bindValue(':oidc_sub', $oidcSub, PDO::PARAM_STR);
     $stmt->execute();
     $existing = $stmt->fetch(PDO::FETCH_ASSOC);
 
     $isAdminInt = $oidcIsAdmin ? 1 : 0;
 
     if ($existing) {
-        // OIDC is the only source of truth for admin role
-        $upd = $db->prepare('UPDATE users SET email = :email, IsAdmin = :is_admin WHERE ID = :id');
+        $upd = $db->prepare('
+            UPDATE users
+            SET username = :username, email = :email, IsAdmin = :is_admin, UpdatedAt = CURRENT_TIMESTAMP
+            WHERE ID = :id
+        ');
+        $upd->bindValue(':username', $username, PDO::PARAM_STR);
         $upd->bindValue(':email', $email, PDO::PARAM_STR);
         $upd->bindValue(':is_admin', $isAdminInt, PDO::PARAM_INT);
         $upd->bindValue(':id', (int)$existing['ID'], PDO::PARAM_INT);
         $upd->execute();
 
+        $existing['username'] = $username;
         $existing['email'] = $email;
         $existing['IsAdmin'] = $isAdminInt;
         return $existing;
     }
 
-    // New OIDC users are normal unless in admin group
-    // Basically how it was before
-    // We use a random password, users will never log in with it but it satisfies the DB schema
-    $placeholderPassword = password_hash(bin2hex(random_bytes(32)), PASSWORD_DEFAULT);
     $ins = $db->prepare('
-        INSERT INTO users (username, password, email, IsAdmin, force_password_reset)
-        VALUES (:username, :password, :email, :is_admin, 0)
+        INSERT INTO users (oidc_sub, username, email, IsAdmin)
+        VALUES (:oidc_sub, :username, :email, :is_admin)
     ');
+    $ins->bindValue(':oidc_sub', $oidcSub, PDO::PARAM_STR);
     $ins->bindValue(':username', $username, PDO::PARAM_STR);
-    $ins->bindValue(':password', $placeholderPassword, PDO::PARAM_STR);
     $ins->bindValue(':email', $email, PDO::PARAM_STR);
     $ins->bindValue(':is_admin', $isAdminInt, PDO::PARAM_INT);
     $ins->execute();
 
     return [
         'ID' => (int)$db->lastInsertId(),
+        'oidc_sub' => $oidcSub,
         'username' => $username,
         'email' => $email,
         'IsAdmin' => $isAdminInt,
@@ -86,30 +88,31 @@ if (!isset($_SESSION['authenticated'])) {
         
         // Dev only
         // Todo: Make hostname into a config option
-        $oidc->setRedirectURL('http://localhost:8001/index.php');
+        $oidc->setRedirectURL('https://dev.ismailj.eu.org/index.php');
 
         // Jumbojett's lib does the rest here, no need for a callback page or anything
         $oidc->authenticate();
 
         $userInfo = $oidc->requestUserInfo();
 
-        // Sync OIDC to Session
+        // Sync OIDC to local user and session
+        $oidcSub = (string)($userInfo->sub ?? '');
+        if ($oidcSub === '') {
+            throw new RuntimeException('OIDC subject (sub) is missing');
+        }
+
         $oidcUsername = $userInfo->preferred_username ?? ($userInfo->name ?? 'User');
         $oidcEmail = $userInfo->email ?? null;
         $oidcIsAdmin = isset($userInfo->groups) && in_array('dy_admin', (array)$userInfo->groups, true);
 
-        $localUser = sync_oidc_user($db, $oidcUsername, $oidcEmail, $oidcIsAdmin);
+        $localUser = sync_oidc_user($db, $oidcSub, $oidcUsername, $oidcEmail, $oidcIsAdmin);
 
         $_SESSION['authenticated'] = true;
-        $_SESSION['oidc_sub'] = (string)($userInfo->sub ?? '');
-        $_SESSION['user_id'] = (int)$localUser['ID'];   // keep local DB ID
+        $_SESSION['oidc_sub'] = $oidcSub;
+        $_SESSION['user_id'] = (int)$localUser['ID'];
         $_SESSION['username'] = $localUser['username'];
         $_SESSION['email'] = $localUser['email'];
         $_SESSION['isAdmin'] = ((int)$localUser['IsAdmin'] === 1);
-        
-        // Admin check
-        // Todo: make this user definable
-        $_SESSION['isAdmin'] = isset($userInfo->groups) && in_array('dy_admin', (array)$userInfo->groups);
 
         if (!isset($_SESSION['csrf_token'])) {
             $_SESSION['csrf_token'] = bin2hex(random_bytes(32));

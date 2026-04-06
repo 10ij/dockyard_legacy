@@ -3,11 +3,11 @@
         'name' => 'ismail/dockyard',
         'pretty_version' => 'dev-master',
         'version' => 'dev-master',
-        'reference' => '62b41773f4ecc6bebaa7bd63efb6358f0bf32a87',
+        'reference' => '42eb1c948fb7bda27531c0c03e33b1b140ef0648',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../../',
         'aliases' => array(),
-        'dev' => true,
+        'dev' => false,
     ),
     'versions' => array(
         'delight-im/auth' => array(
@@ -85,7 +85,7 @@
         'ismail/dockyard' => array(
             'pretty_version' => 'dev-master',
             'version' => 'dev-master',
-            'reference' => '62b41773f4ecc6bebaa7bd63efb6358f0bf32a87',
+            'reference' => '42eb1c948fb7bda27531c0c03e33b1b140ef0648',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../../',
             'aliases' => array(),
@@ -144,15 +144,6 @@
             'install_path' => __DIR__ . '/../phpseclib/phpseclib',
             'aliases' => array(),
             'dev_requirement' => false,
-        ),
-        'phpstan/phpstan' => array(
-            'pretty_version' => '2.1.39',
-            'version' => '2.1.39.0',
-            'reference' => 'c6f73a2af4cbcd99c931d0fb8f08548cc0fa8224',
-            'type' => 'library',
-            'install_path' => __DIR__ . '/../phpstan/phpstan',
-            'aliases' => array(),
-            'dev_requirement' => true,
         ),
         'psr/http-client' => array(
             'pretty_version' => '1.0.3',

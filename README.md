@@ -7,9 +7,32 @@ todo:
  - Remove user deletion logic fully (rely on OIDC)
  - Finish and migrate to `users/action.php`
  - Remove auth specific fields / tables from DB schema
- - Assess if entrypoint is even needed
+ - Assess if entrypoint is even needed (it isnt, unused rn, lets delete it)
  - Remove "not in use" comment from `docker.php`
- - Fix nginx
+ - 
+
+notes to add in:
+ - codebase is under 3mb
+ - FrankenPHP
+ - 96mb RAM usage
+    - compare to other platforms
+ - OIDC Only, need to setup instructions to use it w github, google, discord
+    - maybe authelia, authentik, pocket-id (which i use too)
+    - time consuming though
+ - oh yeah per user perms actually work now too...
+    - portainer makes u pay for this
+ - download and run portainer, dockge, yacht, and whatever else there is
+    - this is time consuming ah
+    - this is also gonna kill my homeserver
+ - this isnt for orchestration
+    - purely stop/start/logs/rbac
+    - literally started for minecraft and grew
+ - note ai usage
+    - minimal, just for ui and double checking
+    - also for minor refactors
+    - most of copilots agentic code has been written over
+      - really messed up a lot of the app never gonna use agentic coding again
+    - also used for readme, changelog (vetted), and improving comments
 
 # Dockyard
 
