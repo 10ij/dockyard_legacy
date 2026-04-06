@@ -1,67 +1,49 @@
-FROM php:8.3-fpm-alpine
+FROM dunglas/frankenphp:1.12.1-php8-alpine
 
-# Get our deps setup
+# 1. Install only what you actually need
+# Removed: nginx, git, curl (already in base), dos2unix (try to fix line endings in git instead)
 RUN apk add --no-cache \
     bash \
-    curl \
-    git \
-    sudo \
-    sqlite \
-    sqlite-dev \
-    icu-dev \
-    oniguruma-dev \
-    libxml2-dev \
-    tzdata \
-    nginx \
     docker-cli \
-    dos2unix
+    sudo \
+    icu-dev \
+    libxml2-dev
 
-# PHP extensions
-RUN docker-php-ext-install pdo pdo_sqlite intl opcache
+# 2. Optimized Extension Install
+RUN install-php-extensions pdo pdo_sqlite intl opcache
 
-# OPCache should hopefully reduce compute
-RUN { \
-  echo "opcache.enable=1"; \
-  echo "opcache.memory_consumption=64"; \
-  echo "opcache.interned_strings_buffer=8"; \
-  echo "opcache.max_accelerated_files=10000"; \
-  echo "opcache.validate_timestamps=0"; \
-} > /usr/local/etc/php/conf.d/opcache.ini
+# 3. Use the FrankenPHP-specific path
+WORKDIR /app
 
-WORKDIR /var/www/html
+# 4. App Config
+RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
+    && { \
+        echo "opcache.enable=1"; \
+        echo "opcache.memory_consumption=32"; \
+        echo "opcache.interned_strings_buffer=4"; \
+        echo "opcache.max_accelerated_files=10000"; \
+        echo "opcache.validate_timestamps=1"; \
+    } > /usr/local/etc/php/conf.d/dockyard-opcache.ini
 
-# Copy the app (and set perms)
-COPY --chown=www-data:www-data /src /var/www/html/
-RUN chmod -R 777 /var/www/html
+# echo "opcache.validate_timestamps=0"; \
 
-# Docker perms
-RUN addgroup docker 2>/dev/null || true \
-  && addgroup www-data docker \
-  && echo "www-data ALL=(ALL) NOPASSWD: /var/www/html/manage_containers.sh" > /etc/sudoers.d/manage-containers \
-  && chmod 0440 /etc/sudoers.d/manage-containers
+# 5. Fix the Docker group issue properly
+# We create the group and allow the default internal user to run the script via sudo
+RUN addgroup -S docker && addgroup root docker \
+    && echo "root ALL=(ALL) NOPASSWD: /app/public/private/manage_containers.sh" > /etc/sudoers.d/manage-containers \
+    && chmod 0440 /etc/sudoers.d/manage-containers
 
-# We need db & dirs set
-RUN mkdir -p /var/www/html/data /var/www/html/logs \
-  && chmod 777 /var/www/html/data /var/www/html/logs \
-  && touch /var/www/html/data/db.sqlite \
-  && chown www-data:www-data /var/www/html/data/db.sqlite \
-  && chmod 777 /var/www/html/data/db.sqlite
+# 6. Setup data dirs
+RUN mkdir -p /app/public/data /app/public/logs \
+    && touch /app/public/data/db.sqlite
 
-# Scripts
-RUN chmod +x /var/www/html/private/manage_containers.sh
+# 7. Copy Source
+COPY ./src /app/public
+RUN chmod +x /app/public/private/manage_containers.sh
 
-# Nginx conf
-COPY nginx/default.conf /etc/nginx/http.d/default.conf
+# FrankenPHP Envs
+ENV SERVER_NAME=:80
+ENV SERVER_ROOT=/app/public
 
-# Entrypoint
-COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh \
-    && dos2unix /usr/local/bin/entrypoint.sh \
-    && dos2unix /var/www/html/private/manage_containers.sh
-
-# Expose HTTP port
-EXPOSE 80
-
-# Start Apache
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-CMD ["sh", "-c", "php-fpm -D && nginx -g 'daemon off;'"]
+# No need for entrypoint.sh to start two services anymore!
+# FrankenPHP handles the server start automatically.
