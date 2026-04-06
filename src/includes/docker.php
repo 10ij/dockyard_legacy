@@ -1,5 +1,9 @@
 <?php
-// needs to be tested and debugged, not currently used in the app
+/**
+ * Handles Docker Management via CLI wrapper.
+ * * @package Dockyard
+ * @author 10ij
+ */
 
 class Docker
 {
