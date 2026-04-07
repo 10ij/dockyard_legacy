@@ -3,3 +3,4 @@ src/data/db.sqlite
 *.log
 .env
 compose.yml
+src/private/config.php
