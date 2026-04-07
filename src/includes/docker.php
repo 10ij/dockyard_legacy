@@ -1,7 +1,7 @@
 <?php
 /**
  * Handles Docker Management via CLI wrapper.
- * * @package Dockyard
+ * @package Dockyard
  * @author 10ij
  */
 
