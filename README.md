@@ -9,6 +9,7 @@ todo:
     - because someone may login right
     - and you wanna reset their perms
     - or maybe theyve been deleted oidc side
+      - can we add this to cron, check if theyve been deleted oidc side?
  - Finish and migrate to `users/action.php`
 
 notes to add in:
