@@ -3,7 +3,10 @@ require_once '../../includes/auth.php';
 require_once '../../includes/functions.php';
 require_once '../../includes/db.php';
 require_once '../../includes/docker.php';
+require_once '../../includes/log.php';
 require_once 'templates/list.php';
+
+$log = new logger();
 
 $db = get_db();
 $docker = new Docker();
@@ -43,6 +46,7 @@ switch ($action) {
         $result = $docker->start($name);
         $output = $result['output'];
         $success = $result['success'];
+        $log->logevent("container.start", "started container", "info", $name);
         break;
 
     case 'stop':
@@ -52,6 +56,7 @@ switch ($action) {
         $result = $docker->stop($name);
         $output = $result['output'];
         $success = $result['success'];
+        $log->logevent("container.stop", "stopped container", "info", $name);
         break;
 
     // http://URL:Port/apps/action.php?action=logs&name=app&lines=2

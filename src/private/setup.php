@@ -96,6 +96,24 @@ $dbFile = $dbDir . '/db.sqlite';
         )
     ");
 
+    $db->exec(" 
+        CREATE TABLE IF NOT EXISTS audit_logs (
+            ID INTEGER PRIMARY KEY AUTOINCREMENT,
+            CreatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
+            Level TEXT NOT NULL,
+            Action TEXT NOT NULL,
+            Message TEXT NOT NULL,
+            ContainerName TEXT,
+            UserID INTEGER,
+            Username TEXT,
+            OidcSub TEXT,
+            IPAddress TEXT,
+            UserAgent TEXT,
+            MetadataJson TEXT,
+            FOREIGN KEY (UserID) REFERENCES users(ID) ON DELETE SET NULL
+        )
+    ");
+
     out('Creating indexes...');
 
     $db->exec("CREATE INDEX IF NOT EXISTS idx_container_permissions_user ON container_permissions(UserID)");
@@ -103,6 +121,9 @@ $dbFile = $dbDir . '/db.sqlite';
     $db->exec("CREATE INDEX IF NOT EXISTS idx_apps_container_name ON apps(ContainerName)");
     $db->exec("CREATE INDEX IF NOT EXISTS idx_apps_status ON apps(Status)");
     $db->exec("CREATE INDEX IF NOT EXISTS idx_users_oidc_sub ON users(oidc_sub)");
+    $db->exec("CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(CreatedAt)");
+    $db->exec("CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(UserID)");
+    $db->exec("CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(Action)");
 
     out('Setup complete.');
 

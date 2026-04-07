@@ -1,4 +1,10 @@
 <?php
+/**
+ * Authentication and session management for Dockyard.
+ * @package Dockyard
+ * @author 10ij
+ */
+
 /* NOTES:
    - All client facing pages should use this
    - Login.php doesn't use this (for obvious reasons)
@@ -6,7 +12,6 @@
    - OIDC Flow begins at line 80
    - We derive admin status from OIDC groups
    - CSRF token is generated on login
-   - 
 */
 header("X-Frame-Options: DENY");
 header("X-Content-Type-Options: nosniff");

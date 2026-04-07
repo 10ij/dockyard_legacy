@@ -38,6 +38,12 @@ notes to add in:
    - theres an example one
    - you can either have admins defined by OIDC or by local
  - we store users by their oidc sub_id
+ - setup instructions need to be altered
+   - download the example.yml
+   - download the setup.sh
+      - make it executable
+   - execute setup.sh
+   - follow oidc instructions at https://ismailj.eu.org/dockyard/start
 
 
 # Dockyard

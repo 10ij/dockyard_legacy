@@ -12,6 +12,7 @@
  */
 
 require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/db.php';
 
 // Path to the container management script
 $scriptPath = dirname(__DIR__) . '/private/manage_containers.sh';

@@ -211,20 +211,6 @@ try {
         .status-check { color: #388e3c; }
         .status-cross { color: #d32f2f; }
 
-        .btn-delete {
-            background-color: var(--pico-red-500);
-            border-color: var(--pico-red-500);
-            padding: 0.4rem 0.8rem;
-            font-size: 0.85rem;
-            width: auto;
-            margin: 0;
-        }
-
-        .btn-delete:hover {
-            background-color: var(--pico-red-600);
-            border-color: var(--pico-red-600);
-        }
-
         table {
             margin-top: 1rem;
         }
@@ -326,7 +312,7 @@ try {
                                         <th style="text-align: center;">View</th>
                                         <th style="text-align: center;">Start</th>
                                         <th style="text-align: center;">Stop</th>
-                                        <th style="text-align: right;">Actions</th>
+                                        <th style="text-align: center;">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>

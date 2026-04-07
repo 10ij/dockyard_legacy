@@ -45,8 +45,5 @@ RUN chmod +x /app/private/manage_containers.sh
 ENV SERVER_NAME=:80
 ENV SERVER_ROOT=/app/public
 
-# 8. Run our setup script & setup CRON
-# RUN we need to cron /app/cron/cron.php
-
 # No need for entrypoint.sh to start two services anymore!
 # FrankenPHP handles the server start automatically.
