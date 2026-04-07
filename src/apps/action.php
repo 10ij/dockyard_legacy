@@ -17,8 +17,8 @@ function respond_error($msg) {
     exit();
 }
 
-$action = $_GET['action'] ?? null;
-$name   = $_GET['name'] ?? null;
+$action = $_SERVER['REQUEST_METHOD'] === 'POST' ? ($_POST['action'] ?? null) : ($_GET['action'] ?? null);
+$name = $_SERVER['REQUEST_METHOD'] === 'POST' ? ($_POST['name'] ?? null) : ($_GET['name'] ?? null);
 
 if (!preg_match('/^[a-zA-Z0-9_.-]{1,64}$/', $name)) {
     respond_error("Invalid container name format");
@@ -37,12 +37,18 @@ $success = false;
 
 switch ($action) {
     case 'start':
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            respond_error("POST Only mate");
+        }
         $result = $docker->start($name);
         $output = $result['output'];
         $success = $result['success'];
         break;
 
     case 'stop':
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            respond_error("POST Only mate");
+        }
         $result = $docker->stop($name);
         $output = $result['output'];
         $success = $result['success'];

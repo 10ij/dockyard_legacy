@@ -131,7 +131,7 @@ $canStop = $isAdmin || check_container_permission($db, $user_id, $name, 'stop');
     <dialog id="confirm-modal">
         <form 
             id="modal-form"
-            hx-get="action.php"
+            hx-post="action.php"
             hx-target="#action-feedback"
             hx-swap="innerHTML"
             hx-on::after-request="this.closest('dialog').close()"
@@ -141,6 +141,7 @@ $canStop = $isAdmin || check_container_permission($db, $user_id, $name, 'stop');
 
             <input type="hidden" name="action" id="modal-action" />
             <input type="hidden" name="name" value="<?= htmlspecialchars($name) ?>" />
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>" />
 
             <button type="button" class="secondary" onclick="this.closest('dialog').close()">
                 Cancel
