@@ -49,42 +49,41 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         } elseif (!empty($email) && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $error_message = "Invalid email address format.";
         }
-        }
-        
-        if (empty($error_message)) {
-            try {
-                // Check if username already exists for a different user
-                $stmtCheck = $db->prepare('SELECT ID FROM users WHERE username = :username AND ID != :id');
-                $stmtCheck->bindParam(':username', $username, PDO::PARAM_STR);
-                $stmtCheck->bindParam(':id', $user_id, PDO::PARAM_INT);
-                $stmtCheck->execute();
-                if ($stmtCheck->fetch()) {
-                    $error_message = "Username already exists.";
+    }
+    
+    if (empty($error_message)) {
+        try {
+            // Check if username already exists for a different user
+            $stmtCheck = $db->prepare('SELECT ID FROM users WHERE username = :username AND ID != :id');
+            $stmtCheck->bindParam(':username', $username, PDO::PARAM_STR);
+            $stmtCheck->bindParam(':id', $user_id, PDO::PARAM_INT);
+            $stmtCheck->execute();
+            if ($stmtCheck->fetch()) {
+                $error_message = "Username already exists.";
+            } else {
+                // Prevent removing admin status from the currently logged-in user
+                if ($user_data['username'] === $_SESSION['username'] && $isAdmin == 0) {
+                    $error_message = "You cannot remove your own admin privileges.";
                 } else {
-                    // Prevent removing admin status from the currently logged-in user
-                    if ($user_data['username'] === $_SESSION['username'] && $isAdmin == 0) {
-                        $error_message = "You cannot remove your own admin privileges.";
-                    } else {
-                        // Update without changing password
-                        $stmt = $db->prepare('UPDATE users SET username = :username, email = :email, IsAdmin = :isAdmin WHERE ID = :id');
-                    
-                        $stmt->bindParam(':username', $username, PDO::PARAM_STR);
-                        $stmt->bindParam(':email', $email, PDO::PARAM_STR);
-                        $stmt->bindParam(':isAdmin', $isAdmin, PDO::PARAM_INT);
-                        $stmt->bindParam(':id', $user_id, PDO::PARAM_INT);
-                        $stmt->execute();
+                    // Update without changing password
+                    $stmt = $db->prepare('UPDATE users SET username = :username, email = :email, IsAdmin = :isAdmin WHERE ID = :id');
+                
+                    $stmt->bindParam(':username', $username, PDO::PARAM_STR);
+                    $stmt->bindParam(':email', $email, PDO::PARAM_STR);
+                    $stmt->bindParam(':isAdmin', $isAdmin, PDO::PARAM_INT);
+                    $stmt->bindParam(':id', $user_id, PDO::PARAM_INT);
+                    $stmt->execute();
 
-                        $success_message = "User updated successfully.";
-                        // Refresh user data
-                        $user_data['username'] = $username;
-                        $user_data['email'] = $email;
-                        $user_data['IsAdmin'] = $isAdmin;
-                    }
+                    $success_message = "User updated successfully.";
+                    // Refresh user data
+                    $user_data['username'] = $username;
+                    $user_data['email'] = $email;
+                    $user_data['IsAdmin'] = $isAdmin;
                 }
-            } catch (PDOException $e) {
-                error_log("Database Error: " . $e->getMessage());
-                $error_message = "Database error during user update. Please try again.";
             }
+        } catch (PDOException $e) {
+            error_log("Database Error: " . $e->getMessage());
+            $error_message = "Database error during user update. Please try again.";
         }
     }
 }
