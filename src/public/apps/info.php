@@ -2,10 +2,10 @@
 if (!isset($_GET['name'])) {
     exit();
 }
-require_once '../includes/db.php';
-require_once '../includes/auth.php'; 
-require_once '../includes/functions.php';
-require_once '../includes/docker.php';
+require_once '../../includes/db.php';
+require_once '../../includes/auth.php'; 
+require_once '../../includes/functions.php';
+require_once '../../includes/docker.php';
 
 $db = get_db();
 $name = htmlspecialchars($_GET['name'], ENT_QUOTES, 'UTF-8');

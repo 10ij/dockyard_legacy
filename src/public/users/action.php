@@ -1,7 +1,7 @@
 <?php
-require_once '../includes/auth.php';
-require_once '../includes/functions.php';
-require_once '../includes/db.php';
+require_once '../../includes/auth.php';
+require_once '../../includes/functions.php';
+require_once '../../includes/db.php';
 
 $db = get_db();
 
@@ -27,12 +27,6 @@ $success = false;
 switch ($action) {
     case 'edit':
 
-        break;
-
-    case 'delete':
-        $result = $docker->stop($name);
-        $output = $result['output'];
-        $success = $result['success'];
         break;
 
     default:

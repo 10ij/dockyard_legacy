@@ -1,9 +1,10 @@
 <?php
-require_once 'includes/auth.php';
-require_once 'includes/db.php';
-$db = get_db();
+// This serves more as a frontend file
+// Backend logic can be found in apps/action.php
+// We make api calls to action.php via HTMX
 
-$username = $_SESSION['username'] ?? '';
+require_once '../includes/auth.php';
+
 $isAdmin = isset($_SESSION['isAdmin']) && $_SESSION['isAdmin'] === true;
 $user_id = $_SESSION['user_id'] ?? null;
 
@@ -11,7 +12,7 @@ $user_id = $_SESSION['user_id'] ?? null;
 <!DOCTYPE html>
 <html data-theme="light">
 <head>
-    <title>Users</title>
+    <title>Containers</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
@@ -141,7 +142,7 @@ $user_id = $_SESSION['user_id'] ?? null;
             <header>
                 <div class="header-nav">
                     <hgroup style="margin: 0;">
-                        <h1>Users</h1>
+                        <h1>Containers</h1>
                     </hgroup>
                     <button class="secondary outline" onclick="location.href='index.php';" style="width: auto;">
                         <i class="fa fa-arrow-left"></i> Back
@@ -150,56 +151,35 @@ $user_id = $_SESSION['user_id'] ?? null;
             </header>
 
             <main>
-                <section>                    
+                <section>
+                    <div class="table-header">
+                        <button class="refresh-table secondary"
+                                hx-get="/apps/action.php?action=table&name=dummy"
+                                hx-target="#container-table-body"
+                                hx-swap="innerHTML">
+                            <i class="fa fa-refresh"></i> Refresh Table
+                        </button>
+                    </div>
+                    
                     <div id="container-table-container" class="overflow-auto">
-<table role="grid">
-                    <thead>
-                        <tr>
-                            <th scope="col">Username</th>
-                            <th scope="col">Email</th>
-                            <th scope="col">Role</th>
-                            <th scope="col">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    <?php
-                    $stmt = $db->prepare('SELECT * FROM users ORDER BY username');
-                    $stmt->execute();
-                    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                        echo '<tr>';
-                        // Username
-                        echo '<td>';
-                        if ($row['username'] === $username) {
-                            echo '<strong>' . htmlspecialchars($row['username']) . '</strong>';
-                        } else {
-                            echo htmlspecialchars($row['username']);
-                        }
-                        echo '</td>';
-                        // Email
-                        echo '<td>' . htmlspecialchars($row['email'] ?? '') . '</td>';
-                        // Role
-                        echo '<td>';
-                        if ($row['IsAdmin']) {
-                            echo '<mark>Admin</mark>';
-                        } else {
-                            echo 'User';
-                        }
-                        echo '</td>';
-                        // Actions
-                        echo '<td class="action-links">';
-                        if ($row['username'] !== $username) {
-                            echo '<a href="users/edit.php?id=' . htmlspecialchars($row['ID']) . '" title="Edit"><i class="fa fa-edit"></i></a>';
-                            echo '<a href="users/manage_permissions.php?id=' . htmlspecialchars($row['ID']) . '" title="Docker Permissions"><i class="fa fa-plug"></i></a>';
-                            echo '<i class="fa fa-trash text-danger" style="cursor: pointer;" onclick="deleteUser(\'' . htmlspecialchars($row['username'], ENT_QUOTES) . '\')" title="Delete User"></i>';
-                        } else {
-                            echo '<span style="color: var(--pico-muted-color); font-style: italic;">(You)</span>';
-                        }
-                        echo '</td>';
-                        echo '</tr>';
-                    }
-                    ?>
-                    </tbody>
-                </table>
+                        <table class="striped">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Name</th>
+                                    <th scope="col">Image</th>
+                                    <th scope="col">Version</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">Port</th>
+                                    <th scope="col" style="text-align: right;">Management</th>
+                                </tr>
+                            </thead>
+                            <tbody id="container-table-body"
+                                hx-get="/apps/action.php?action=table&name=dummy"
+                                hx-trigger="load"
+                                hx-swap="innerHTML">
+                                <!-- Data populated automatically by HTMX on page load -->
+                            </tbody>
+                        </table>
                     </div>
                 </section>
             </main>

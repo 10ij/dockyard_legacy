@@ -1,6 +1,6 @@
 <?php
-require_once 'includes/auth.php';
-require_once 'includes/functions.php';
+require_once '../includes/auth.php';
+require_once '../includes/functions.php';
 require_admin(); // This function ensures only admins can access this page
 ?>
 <!DOCTYPE html>

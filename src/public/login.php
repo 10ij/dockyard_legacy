@@ -13,7 +13,7 @@ if (isset($_SESSION['authenticated']) && $_SESSION['authenticated'] === true) {
  */
 if (isset($_POST['login_oidc'])) {
     // This file contains the $oidc->authenticate() logic we wrote earlier
-    require_once 'includes/auth.php'; 
+    require_once '../includes/auth.php'; 
     exit;
 }
 ?>

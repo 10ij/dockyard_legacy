@@ -30,16 +30,16 @@ RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
 # 5. Fix the Docker group issue properly
 # We create the group and allow the default internal user to run the script via sudo
 RUN addgroup -S docker && addgroup root docker \
-    && echo "root ALL=(ALL) NOPASSWD: /app/public/private/manage_containers.sh" > /etc/sudoers.d/manage-containers \
+    && echo "root ALL=(ALL) NOPASSWD: /app/private/manage_containers.sh" > /etc/sudoers.d/manage-containers \
     && chmod 0440 /etc/sudoers.d/manage-containers
 
 # 6. Setup data dirs
-RUN mkdir -p /app/public/data /app/public/logs \
-    && touch /app/public/data/db.sqlite
+RUN mkdir -p /app/data /app/public/logs \
+    && touch /app/data/db.sqlite
 
 # 7. Copy Source
-COPY ./src /app/public
-RUN chmod +x /app/public/private/manage_containers.sh
+COPY ./src /app
+RUN chmod +x /app/private/manage_containers.sh
 
 # FrankenPHP Envs
 ENV SERVER_NAME=:80
