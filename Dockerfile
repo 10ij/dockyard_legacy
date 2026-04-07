@@ -34,7 +34,7 @@ RUN addgroup -S docker && addgroup root docker \
     && chmod 0440 /etc/sudoers.d/manage-containers
 
 # 6. Setup data dirs
-RUN mkdir -p /app/data /app/public/logs \
+RUN mkdir -p /app/data /app/logs \
     && touch /app/data/db.sqlite
 
 # 7. Copy Source
@@ -44,6 +44,9 @@ RUN chmod +x /app/private/manage_containers.sh
 # FrankenPHP Envs
 ENV SERVER_NAME=:80
 ENV SERVER_ROOT=/app/public
+
+# 8. Run our setup script & setup CRON
+RUN php /app/cron/cron.php
 
 # No need for entrypoint.sh to start two services anymore!
 # FrankenPHP handles the server start automatically.

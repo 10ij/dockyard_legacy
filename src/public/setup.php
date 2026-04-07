@@ -7,6 +7,27 @@ if (PHP_SAPI !== 'cli') {
     exit(1);
 }
 
+$lockFile = __DIR__ . '/setup.lock';
+$doneFile = __DIR__ . '/setup.done';
+
+// Already completed → exit safely
+if (file_exists($doneFile)) {
+    out('Setup already completed. Skipping.');
+    exit(0);
+}
+
+// Acquire lock (atomic)
+$lockHandle = fopen($lockFile, 'c');
+
+if (!$lockHandle || !flock($lockHandle, LOCK_EX | LOCK_NB)) {
+    fwrite(STDERR, "Another setup process is running.\n");
+    exit(1);
+}
+
+// Optional: store PID (useful for debugging)
+ftruncate($lockHandle, 0);
+fwrite($lockHandle, (string)getmypid());
+
 function out(string $message): void {
     echo $message . PHP_EOL;
 }

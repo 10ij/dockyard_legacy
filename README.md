@@ -1,15 +1,15 @@
 ## Out of date read-me
 
 todo:
- - OIDC db sync
  - Update readme
  - Remove or use `settings.php` for something
+    - no idea yet
  - Remove user deletion logic fully (rely on OIDC)
+    - actually no, ima keep this
+    - because someone may login right
+    - and you wanna reset their perms
+    - or maybe theyve been deleted oidc side
  - Finish and migrate to `users/action.php`
- - Remove auth specific fields / tables from DB schema
- - Assess if entrypoint is even needed (it isnt, unused rn, lets delete it)
- - Remove "not in use" comment from `docker.php`
- - 
 
 notes to add in:
  - codebase is under 3mb
@@ -33,6 +33,11 @@ notes to add in:
     - most of copilots agentic code has been written over
       - really messed up a lot of the app never gonna use agentic coding again
     - also used for readme, changelog (vetted), and improving comments
+ - config via `config.php`
+   - theres an example one
+   - you can either have admins defined by OIDC or by local
+ - we store users by their oidc sub_id
+
 
 # Dockyard
 

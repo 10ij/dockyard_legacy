@@ -132,6 +132,12 @@ $user_id = $_SESSION['user_id'] ?? null;
             color: var(--pico-muted-color);
             margin: 0;
         }
+
+        .icon-btn {
+            display: inline-block;
+            padding: 6px 10px;
+            margin-right: 5px;
+        }
     </style>
 </head>
 <body>
@@ -188,9 +194,13 @@ $user_id = $_SESSION['user_id'] ?? null;
                         // Actions
                         echo '<td class="action-links">';
                         if ($row['username'] !== $username) {
-                            echo '<a href="users/edit.php?id=' . htmlspecialchars($row['ID']) . '" title="Edit"><i class="fa fa-edit"></i></a>';
-                            echo '<a href="users/manage_permissions.php?id=' . htmlspecialchars($row['ID']) . '" title="Docker Permissions"><i class="fa fa-plug"></i></a>';
-                            echo '<i class="fa fa-trash text-danger" style="cursor: pointer;" onclick="deleteUser(\'' . htmlspecialchars($row['username'], ENT_QUOTES) . '\')" title="Delete User"></i>';
+                            echo '<a class="icon-btn" href="users/manage_permissions.php?id=' . htmlspecialchars($row['ID']) . '" title="Docker Permissions">
+                                    <i class="fa fa-plug"></i>
+                                </a>';
+
+                            echo '<span class="icon-btn text-danger" onclick="deleteUser(\'' . htmlspecialchars($row['username'], ENT_QUOTES) . '\')" title="Delete User">
+                                    <i class="fa fa-trash"></i>
+                                </span>';
                         } else {
                             echo '<span style="color: var(--pico-muted-color); font-style: italic;">(You)</span>';
                         }
