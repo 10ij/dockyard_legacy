@@ -1,4 +1,6 @@
 <?php
+// Messy, yes
+
 require_once '../../includes/auth.php';
 require_once '../../includes/functions.php';
 require_once '../../includes/db.php';
@@ -25,9 +27,23 @@ $name = $_SERVER['REQUEST_METHOD'] === 'POST' ? ($_POST['name'] ?? null) : ($_GE
 
 $user_id = $_SESSION['user_id'] ?? null;
 
+// literaly the only action that doesnt need a container name
+if ($action === 'table') {
+    $table = new clist();
+    $table->render();
+    exit();
+}
+
+if (empty($name) || !preg_match('/^[a-zA-Z0-9_.-]{1,64}$/', $name)) {
+    respond_error("Invalid container name");
+}
+
 switch ($action) {
     // http://URL:Port/apps/action.php?action=logs&name=app&lines=2
     case 'logs':
+        if (!check_container_permission($db, $user_id, $name, 'view')) {
+            respond_error("You do not have permission to view logs for this container");
+        }
         $lines = isset($_GET['lines']) ? intval($_GET['lines']) : 30;
         $lines = max(1, min($lines, 500));
         $result = $docker->logs($name, $lines);
@@ -37,21 +53,17 @@ switch ($action) {
         exit();
 
     case 'status':
+        if (!check_container_permission($db, $user_id, $name, 'view')) {
+            respond_error("You do not have permission to view logs for this container");
+        }
         $result = $docker->status($name);
         $output = $result['output'];
         echo $output;
         exit();
-    // this case has a small quirk, because of the checks above you need something in the name param
-    // but it won't be used, so we can just pass a dummy value when requesting the table
-    // http://URL:Port/apps/action.php?action=table&name=anything
-    case 'table':
-        $table = new clist();
-        $table->render();
-        exit();
 }
 
-if (!preg_match('/^[a-zA-Z0-9_.-]{1,64}$/', $name)) {
-    respond_error("Invalid container name format");
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    respond_error("POST only mate");
 }
 
 if (empty($_SESSION['isAdmin']) || $_SESSION['isAdmin'] !== true) {
@@ -60,35 +72,26 @@ if (empty($_SESSION['isAdmin']) || $_SESSION['isAdmin'] !== true) {
     }
 }
 
-$escapedName = escapeshellarg($name);
-
 $output = '';
 $success = false;
 
 switch ($action) {
     case 'start':
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            respond_error("POST Only mate");
-        }
         $result = $docker->start($name);
-        $output = $result['output'];
-        $success = $result['success'];
         $log->logevent("container.start", "started container", "info", $name);
         break;
 
     case 'stop':
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            respond_error("POST Only mate");
-        }
         $result = $docker->stop($name);
-        $output = $result['output'];
-        $success = $result['success'];
         $log->logevent("container.stop", "stopped container", "info", $name);
         break;
 
     default:
         respond_error("Invalid action");
 }
+
+$output = $result['output'];
+$success = $result['success'];
 
 if (isset($_SERVER['HTTP_HX_REQUEST'])) {
     if ($success) {
