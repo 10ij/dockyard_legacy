@@ -117,10 +117,20 @@ if (!isset($_SESSION['authenticated'])) {
         if (DERIVE_ADMIN_BY_GROUP) {
             $oidcIsAdmin = isset($userInfo->groups) && in_array(OIDC_ADMIN_GROUP, (array)$userInfo->groups, true);
         } else {
-            // If not deriving admin by group, make the first user admin by default
-            $stmt = $db->query('SELECT COUNT(*) FROM users');
-            $userCount = (int)$stmt->fetchColumn();
-            $oidcIsAdmin = ($userCount === 0);
+            // Check if THIS specific user is already in our DB
+            $stmt = $db->prepare('SELECT IsAdmin FROM users WHERE oidc_sub = ?');
+            $stmt->execute([$oidcSub]);
+            $existingUser = $stmt->fetch();
+
+            if ($existingUser) {
+                // If they exist, keep their current admin status
+                $oidcIsAdmin = (bool)$existingUser['IsAdmin'];
+            } else {
+                // If they are new, make them admin only if they are the VERY first user
+                $stmt = $db->query('SELECT COUNT(*) FROM users');
+                $userCount = (int)$stmt->fetchColumn();
+                $oidcIsAdmin = ($userCount === 0);
+            }
         }
 
         $localUser = sync_oidc_user($db, $oidcSub, $oidcUsername, $oidcEmail, $oidcIsAdmin);
