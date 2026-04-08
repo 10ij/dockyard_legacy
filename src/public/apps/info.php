@@ -78,13 +78,11 @@ $canStop = $isAdmin || check_container_permission($db, $user_id, $name, 'stop');
                 <div id="status-badge"
                     hx-get="action.php?action=status&name=<?= urlencode($name) ?>"
                     hx-trigger="load, every 1s"
-                    hx-swap="innnerHTML"
-                    hx-on::after-on-load="
-                        const status = event.detail.xhr.responseText.trim().toLowerCase();
-                        this.className = 'status-badge status-' + status;
-                    "
-                    class="status-badge status-<?= strtolower(trim($status)) ?>">
-                    <i class="fa fa-circle" style="font-size: 8px; margin-right: 8px;"></i>
+                    hx-swap="innerHTML"
+                    >
+                    <div class="status-badge">
+                        <i class="fa fa-circle" style="font-size: 8px; margin-right: 8px;"></i>
+</div>
                 </div>
 
                 <!-- Controls -->

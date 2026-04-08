@@ -58,7 +58,8 @@ switch ($action) {
         }
         $result = $docker->status($name);
         $output = $result['output'];
-        echo $output;
+        $response = "<div class='status-badge status-" . $output . "'>" . $output . "</div>";
+        echo $response;
         exit();
 }
 
@@ -79,19 +80,20 @@ switch ($action) {
     case 'start':
         $result = $docker->start($name);
         $log->logevent("container.start", "started container", "info", $name);
+        $output = $result['output'];
+        $success = $result['success'];
         break;
 
     case 'stop':
         $result = $docker->stop($name);
         $log->logevent("container.stop", "stopped container", "info", $name);
+        $output = $result['output'];
+        $success = $result['success'];
         break;
 
     default:
         respond_error("Invalid action");
 }
-
-$output = $result['output'];
-$success = $result['success'];
 
 if (isset($_SERVER['HTTP_HX_REQUEST'])) {
     if ($success) {

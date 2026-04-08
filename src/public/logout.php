@@ -1,7 +1,5 @@
 <?php
 session_start();
-require_once '../includes/db.php';
-$db = get_db();
 
 session_unset();
 // Remove the cookie

@@ -53,6 +53,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         $stmt->execute();
                         $existing_id = $stmt->fetchColumn();
                         
+                        // If no checkboxes are checked, $_POST['permissions'] will be absent entirely
+                        // (unchecked boxes are not submitted by browsers). The isset() check above
+                        // treats a missing key the same as an empty array, so all three 
+                        // CanView/CanStart/CanStop values resolve to 0. This is intentional.
+
                         // Define permission values
                         $can_view = in_array('view', $permissions) ? 1 : 0;
                         $can_start = in_array('start', $permissions) ? 1 : 0;
@@ -99,7 +104,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         $stmt->bindParam(':id', $permission_id, PDO::PARAM_INT);
                         $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
                         $stmt->execute();
-                        $success_message = "Permission removed successfully.";
+                        
+                        if ($stmt->rowCount() === 0) {
+                            $error_message = "Permission not found or does not belong to this user.";
+                        } else {
+                            $success_message = "Permission removed successfully.";
+                        }
                     } catch (PDOException $e) {
                         $error_message = "Database error: " . $e->getMessage();
                     }
