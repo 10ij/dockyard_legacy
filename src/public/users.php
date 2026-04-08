@@ -3,6 +3,8 @@ require_once '../includes/auth.php';
 require_once '../includes/db.php';
 $db = get_db();
 
+require_admin();
+
 $username = $_SESSION['username'] ?? '';
 $isAdmin = isset($_SESSION['isAdmin']) && $_SESSION['isAdmin'] === true;
 $user_id = $_SESSION['user_id'] ?? null;

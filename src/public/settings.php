@@ -4,6 +4,8 @@ require_once '../includes/db.php';
 require_once '../includes/log.php';
 $db = get_db();
 
+require_admin();
+
 $logs = [];
 $logsError = null;
 
