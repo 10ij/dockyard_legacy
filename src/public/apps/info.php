@@ -20,11 +20,19 @@ if (!$user_id || !check_container_permission($db, $user_id, $name, 'view')) {
 // Fetch container status
 $docker = new Docker();
 $containerData = $docker->inspect($name);
+$currentName = $name;
+$containerIdShort = 'N/A';
+$imageName = 'N/A';
+$createdAt = 'N/A';
 if (!$containerData || empty($containerData[0])) {
     $status = 'Unknown';
 } else {
     $container = $containerData[0];
     $status = $container['State']['Status'] ?? 'Unknown';
+    $currentName = ltrim((string)($container['Name'] ?? $name), '/');
+    $containerIdShort = isset($container['Id']) ? substr((string)$container['Id'], 0, 12) : 'N/A';
+    $imageName = (string)($container['Config']['Image'] ?? 'N/A');
+    $createdAt = isset($container['Created']) ? date('Y-m-d H:i:s', strtotime((string)$container['Created'])) : 'N/A';
 }
 
 // Check user permissions for this container
@@ -81,12 +89,6 @@ $canStop = $isAdmin || check_container_permission($db, $user_id, $name, 'stop');
 
                 <!-- Controls -->
                 <div class="action-group">
-                    <?php if ($isAdmin): ?>
-                    <button class="action-btn warning" onclick="location.href='edit.php?name=<?php echo urlencode($name); ?>';">
-                        <i class="fa fa-pencil"></i> Configure
-                    </button>
-                    <?php endif; ?>
-                    
                     <button 
                         class="action-btn success"
                         <?= !$canStart ? 'disabled style="opacity:0.5;"' : '' ?>
@@ -99,6 +101,32 @@ $canStop = $isAdmin || check_container_permission($db, $user_id, $name, 'stop');
                         onclick="openConfirmModal('stop')">
                         <i class="fa fa-stop"></i> Stop
                     </button>
+                </div>
+
+                <div class="logs-section">
+                    <h3>Container Information</h3>
+                    <div>
+                        <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #dee2e6;">
+                            <span style="font-weight: bold; color: #495057;">Container ID:</span>
+                            <span style="color: #212529; word-break: break-all;"><?= htmlspecialchars($containerIdShort) ?></span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #dee2e6;">
+                            <span style="font-weight: bold; color: #495057;">Current Name:</span>
+                            <span style="color: #212529; word-break: break-all;"><?= htmlspecialchars($currentName) ?></span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #dee2e6;">
+                            <span style="font-weight: bold; color: #495057;">Image:</span>
+                            <span style="color: #212529; word-break: break-all;"><?= htmlspecialchars($imageName) ?></span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #dee2e6;">
+                            <span style="font-weight: bold; color: #495057;">Status:</span>
+                            <span style="color: #212529; word-break: break-all;"><?= htmlspecialchars($status) ?></span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 0.5rem 0;">
+                            <span style="font-weight: bold; color: #495057;">Created:</span>
+                            <span style="color: #212529; word-break: break-all;"><?= htmlspecialchars($createdAt) ?></span>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="logs-section">
@@ -121,9 +149,6 @@ $canStop = $isAdmin || check_container_permission($db, $user_id, $name, 'stop');
                         Loading logs...
                     </div>
                 </div>
-
-            <footer>
-            </footer>
         </article>
     </div>
 

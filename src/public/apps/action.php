@@ -23,6 +23,33 @@ function respond_error($msg) {
 $action = $_SERVER['REQUEST_METHOD'] === 'POST' ? ($_POST['action'] ?? null) : ($_GET['action'] ?? null);
 $name = $_SERVER['REQUEST_METHOD'] === 'POST' ? ($_POST['name'] ?? null) : ($_GET['name'] ?? null);
 
+$user_id = $_SESSION['user_id'] ?? null;
+
+switch ($action) {
+    // http://URL:Port/apps/action.php?action=logs&name=app&lines=2
+    case 'logs':
+        $lines = isset($_GET['lines']) ? intval($_GET['lines']) : 30;
+        $lines = max(1, min($lines, 500));
+        $result = $docker->logs($name, $lines);
+        $output = $result['output'];
+        header('Content-Type: text/plain; charset=UTF-8');
+        echo $output;
+        exit();
+
+    case 'status':
+        $result = $docker->status($name);
+        $output = $result['output'];
+        echo $output;
+        exit();
+    // this case has a small quirk, because of the checks above you need something in the name param
+    // but it won't be used, so we can just pass a dummy value when requesting the table
+    // http://URL:Port/apps/action.php?action=table&name=anything
+    case 'table':
+        $table = new clist();
+        $table->render();
+        exit();
+}
+
 if (!preg_match('/^[a-zA-Z0-9_.-]{1,64}$/', $name)) {
     respond_error("Invalid container name format");
 }
@@ -58,29 +85,6 @@ switch ($action) {
         $success = $result['success'];
         $log->logevent("container.stop", "stopped container", "info", $name);
         break;
-
-    // http://URL:Port/apps/action.php?action=logs&name=app&lines=2
-    case 'logs':
-        $lines = isset($_GET['lines']) ? intval($_GET['lines']) : 30;
-        $lines = max(1, min($lines, 500));
-        $result = $docker->logs($name, $lines);
-        $output = $result['output'];
-        header('Content-Type: text/plain; charset=UTF-8');
-        echo $output;
-        exit();
-
-    case 'status':
-        $result = $docker->status($name);
-        $output = $result['output'];
-        echo $output;
-        exit();
-    // this case has a small quirk, because of the checks above you need something in the name param
-    // but it won't be used, so we can just pass a dummy value when requesting the table
-    // http://URL:Port/apps/action.php?action=table&name=anything
-    case 'table':
-        $table = new clist();
-        $table->render();
-        exit();
 
     default:
         respond_error("Invalid action");
