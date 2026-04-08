@@ -194,7 +194,7 @@ $user_id = $_SESSION['user_id'] ?? null;
                         // Actions
                         echo '<td class="action-links">';
                         if ($row['username'] !== $username) {
-                            echo '<a class="icon-btn" href="users/manage_permissions.php?id=' . htmlspecialchars($row['ID']) . '" title="Docker Permissions">
+                            echo '<a class="icon-btn" href="users/perms.php?id=' . htmlspecialchars($row['ID']) . '" title="Docker Permissions">
                                     <i class="fa fa-plug"></i>
                                 </a>';
 
