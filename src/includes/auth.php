@@ -20,6 +20,8 @@ header("Permissions-Policy: geolocation=(), microphone=(), camera=()");
 
 require_once __DIR__ . '/../private/config.php';
 require_once __DIR__ . '/../vendor/autoload.php';
+require_once 'log.php';
+$log = new Logger();
 require_once 'db.php';
 $db = get_db();
 
@@ -155,21 +157,15 @@ function require_admin(): void {
     }
 }
 
-// CSRF token check for POST requests
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['csrf_token'])) {
-    // Skip CSRF check for the login form itself
-    if (basename($_SERVER['PHP_SELF']) !== 'login.php') {
-        // Log potential CSRF attempt
-        error_log("CSRF token missing in POST request to " . $_SERVER['PHP_SELF']);
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $sessionToken = $_SESSION['csrf_token'] ?? '';
+    $postToken = $_POST['csrf_token'] ?? '';
+
+    if (empty($postToken) || !hash_equals($sessionToken, $postToken)) {
+        // Log the failure
+        $log->logEvent('security.csrf_failure', 'CSRF token validation failed', 'WARNING', null, ['endpoint' => $_SERVER['PHP_SELF']]);
         http_response_code(403);
-        die("Security error: form submission failed validation");
-    }
-} elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['csrf_token'], $_SESSION['csrf_token'])) {
-    if ($_POST['csrf_token'] !== $_SESSION['csrf_token']) {
-        // Log CSRF token mismatch
-        error_log("CSRF token mismatch in POST request to " . $_SERVER['PHP_SELF']);
-        http_response_code(403);
-        die("Security error: invalid form submission");
+        die("Security error: Invalid form submission.");
     }
 }
 
