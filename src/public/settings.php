@@ -1,67 +1,217 @@
 <?php
 require_once '../includes/auth.php';
-require_once '../includes/functions.php';
-require_admin(); // This function ensures only admins can access this page
+require_once '../includes/db.php';
+require_once '../includes/log.php';
+$db = get_db();
+
+$logs = [];
+$logsError = null;
+
+try {
+    $logger = new Logger();
+    $logsJson = $logger->getLogsJson(200);
+    $decoded = json_decode($logsJson, true);
+    $logs = is_array($decoded) ? $decoded : [];
+} catch (Throwable $e) {
+    $logsError = 'Could not load audit logs: ' . $e->getMessage();
+}
+
 ?>
 <!DOCTYPE html>
 <html data-theme="light">
 <head>
     <title>Settings</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.orange.min.css"/>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.colors.min.css"/>
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Pico CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.orange.min.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.colors.min.css" />
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+    <style>
+        article {
+            max-width: 1400px;
+            margin: 0 auto;
+            box-shadow: var(--pico-card-sectioning-background-color);
+        }
+        
+        .header-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--pico-spacing);
+        }
+
+        .status-running { color: #388e3c; font-weight: bold; }
+        .status-exited, .status-stopped { color: #d32f2f; font-weight: bold; }
+        .status-created, .status-unknown { color: #f57c00; font-weight: bold; }
+        
+        .action-buttons { 
+            display: flex; 
+            gap: 8px; 
+            justify-content: flex-end;
+        }
+
+        .action-button { 
+            cursor: pointer; 
+            padding: 0.4rem 0.8rem;
+            border-radius: var(--pico-border-radius);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            border: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .action-button:hover { opacity: 0.85; }
+        .action-button i { margin-right: 5px; }
+
+        .action-start { background-color: #50C878; color: white; }
+        .action-stop { background-color: #FF6B6B; color: white; }
+        .action-logs { background-color: #5DADE2; color: white; }
+
+        /* Modal Overrides for Pico v2 */
+        .view-logs-modal { 
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0; 
+            top: 0; 
+            width: 100%; 
+            height: 100%; 
+            background-color: rgba(0,0,0,0.75); 
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content { 
+            background-color: #13171f; 
+            margin: 2% auto; 
+            padding: 24px; 
+            width: 95%; 
+            max-width: 1000px; 
+            max-height: 90vh; 
+            overflow-y: auto; 
+            border-radius: 12px;
+            border: 1px solid #30363d;
+        }
+
+        .container-logs { 
+            background-color: #0d1117; 
+            padding: 20px; 
+            border-radius: 8px; 
+            font-family: 'Fira Code', 'Courier New', monospace; 
+            white-space: pre-wrap; 
+            max-height: 60vh; 
+            overflow-y: auto; 
+            color: #d1d5db; 
+            font-size: 0.9rem;
+            line-height: 1.5;
+            border: 1px solid #30363d;
+        }
+
+        .close-button { 
+            color: #9ca3af; 
+            float: right; 
+            font-size: 1.5rem; 
+            font-weight: bold; 
+            cursor: pointer; 
+            line-height: 1;
+        }
+        
+        .close-button:hover { color: white; }
+
+        .table-header { 
+            display: flex; 
+            justify-content: space-between;
+            align-items: center; 
+            margin-bottom: 1.5rem; 
+        }
+
+        .refresh-table {
+            width: auto;
+            margin: 0;
+            padding: 0.5rem 1rem;
+        }
+
+        footer p {
+            font-size: 0.8rem;
+            color: var(--pico-muted-color);
+            margin: 0;
+        }
+
+        .icon-btn {
+            display: inline-block;
+            padding: 6px 10px;
+            margin-right: 5px;
+        }
+    </style>
 </head>
-    <body>
-        <div class="container" style="margin-top: 6%">
+<body>
+    <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js"></script>
+    <div class="container" style="padding-top: 4rem; padding-bottom: 4rem;">
+        <article>
             <header>
-                <section>
-                    <h1>Settings</h1>
-                    <button class="secondary" onclick="location.href='index.php';">Back</button>
-                </section>
+                <div class="header-nav">
+                    <hgroup style="margin: 0;">
+                        <h1>Settings</h1>
+                    </hgroup>
+                    <button class="secondary outline" onclick="location.href='index.php';" style="width: auto;">
+                        <i class="fa fa-arrow-left"></i> Back
+                    </button>
+                </div>
             </header>
-            <hr />
+
             <main>
                 <section>
-                    <h2>System Settings</h2>
-                    <form action="update_settings.php" method="post">
-                        <!-- Add CSRF token field -->
-                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
-                        <!-- Add your settings form fields here -->
-                        <div class="grid">
-                            <label for="setting1">
-                                Setting 1
-                                <input type="text" id="setting1" name="setting1" value="">
-                            </label>
-                            
-                            <label for="setting2">
-                                Setting 2
-                                <input type="text" id="setting2" name="setting2" value="">
-                            </label>
+                    <div class="table-header">
+                        <h3 style="margin: 0;">Audit Logs</h3>
+                    </div>
+
+                    <?php if ($logsError !== null): ?>
+                        <div class="pico-background-red-100 pico-color-red-900" style="padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <?= htmlspecialchars($logsError) ?>
                         </div>
-                        
-                        <div class="grid">
-                            <label for="setting3">
-                                Setting 3
-                                <select id="setting3" name="setting3">
-                                    <option value="option1">Option 1</option>
-                                    <option value="option2">Option 2</option>
-                                    <option value="option3">Option 3</option>
-                                </select>
-                            </label>
-                            
-                            <label for="setting4">
-                                Setting 4
-                                <input type="checkbox" id="setting4" name="setting4" role="switch">
-                            </label>
+                    <?php elseif (empty($logs)): ?>
+                        <p style="color: var(--pico-muted-color);">No audit logs recorded yet.</p>
+                    <?php else: ?>
+                        <div id="logs-table-container" class="overflow-auto">
+                            <table class="striped">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Time</th>
+                                        <th scope="col">Level</th>
+                                        <th scope="col">Action</th>
+                                        <th scope="col">User</th>
+                                        <th scope="col">Container</th>
+                                        <th scope="col">Message</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                <?php foreach ($logs as $row): ?>
+                                    <tr>
+                                        <td><?= htmlspecialchars((string)($row['CreatedAt'] ?? '')) ?></td>
+                                        <td><?= htmlspecialchars((string)($row['Level'] ?? '')) ?></td>
+                                        <td><?= htmlspecialchars((string)($row['Action'] ?? '')) ?></td>
+                                        <td><?= htmlspecialchars((string)($row['Username'] ?? '')) ?></td>
+                                        <td><?= htmlspecialchars((string)($row['ContainerName'] ?? '')) ?></td>
+                                        <td><?= htmlspecialchars((string)($row['Message'] ?? '')) ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                                </tbody>
+                            </table>
                         </div>
-                        
-                        <button type="submit" class="contrast">Save Settings</button>
-                    </form>
+                    <?php endif; ?>
                 </section>
             </main>
-            <footer>
-                <p>Admin-only settings page</p>
-            </footer>
-        </div>
-    </body>
+        </article>
+    </div>
+    
+    <script>
+        // Use the CSRF token from PHP
+        window.csrfToken = <?php echo json_encode($_SESSION['csrf_token'] ?? ''); ?>;
+    </script>
+</body>
 </html>

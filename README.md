@@ -1,124 +1,75 @@
-## Out of date read-me
-
-todo:
- - Update readme
- - Remove or use `settings.php` for something
-    - no idea yet
- - Remove user deletion logic fully (rely on OIDC)
-    - actually no, ima keep this
-    - because someone may login right
-    - and you wanna reset their perms
-    - or maybe theyve been deleted oidc side
-      - can we add this to cron, check if theyve been deleted oidc side?
- - Finish and migrate to `users/action.php`
-
-notes to add in:
- - codebase is under 3mb
- - FrankenPHP
- - 96mb RAM usage
-    - compare to other platforms
- - OIDC Only, need to setup instructions to use it w github, google, discord
-    - maybe authelia, authentik, pocket-id (which i use too)
-    - time consuming though
- - oh yeah per user perms actually work now too...
-    - portainer makes u pay for this
- - download and run portainer, dockge, yacht, and whatever else there is
-    - this is time consuming ah
-    - this is also gonna kill my homeserver
- - this isnt for orchestration
-    - purely stop/start/logs/rbac
-    - literally started for minecraft and grew
- - note ai usage
-    - minimal, just for ui and double checking
-    - also for minor refactors
-    - most of copilots agentic code has been written over
-      - really messed up a lot of the app never gonna use agentic coding again
-    - also used for readme, changelog (vetted), and improving comments
- - config via `config.php`
-   - theres an example one
-   - you can either have admins defined by OIDC or by local
- - we store users by their oidc sub_id
- - setup instructions need to be altered
-   - download the example.yml
-   - download the setup.sh
-      - make it executable
-   - execute setup.sh
-   - follow oidc instructions at https://ismailj.eu.org/dockyard/start
-
-
 # Dockyard
 
-A dead-simple, super-lightweight PHP + SQLite web UI for managing Docker containers. It does one thing well: let you view container logs and start/stop containers with per-user permissions and minimal ops overhead.
+A dead-simple, ultra-lightweight PHP + SQLite web UI for managing Docker containers. Dockyard isn't an orchestrator; it is a specialized tool for **Logs, Status, and RBAC.**
 
-Image: `ghcr.io/10ij/dockyard:v1.0.1` (also available as `:latest`)  
-Stack: PHP 8, SQLite3, HTMX, Pico CSS
+Originally built to manage Minecraft servers for friends, it has grown into a production-ready, low-overhead management layer.
 
-## Table of contents
-- [Quick start (Docker)](#quick-start-docker)
-- [Docker Compose example](#docker-compose-example)
-- [Features](#features)
-- [Usage](#usage)
-- [Security & deployment notes](#security--deployment-notes)
-- [Development](#development)
-- [Contributing](#contributing)
-- [License](#license)
-- [Changelog](#changelog)
+**Current Image:** `ghcr.io/10ij/dockyard:latest`
 
----
+**Stack:** PHP 8.3 (FrankenPHP), SQLite3, HTMX, Pico CSS.
 
-## Quick start (Docker)
+## Why Dockyard?
 
-Run on the Docker host (requires access to the Docker socket):
+I didn’t write this to compete with major orchestration tools, and have kept it that way.
 
-```bash
-docker run -d \
-  --name dockyard \
-  -p 8080:80 \
-  -v /var/run/docker.sock:/var/run/docker.sock:ro \
-  -v dockyard-data:/app/data \
-  ghcr.io/10ij/dockyard:v1.0.1
-```
+ - **Ultra Lightweight:** The entire codebase is **under 3MB.**
 
-Open: http://localhost:8080
+ - **Memory Efficient:** Runs on **96MB of RAM.** Compare this to Portainer or Yacht, which often consume significantly more.
 
-Notes:
-- The app inspects and controls containers via the Docker socket.
-- Persist data by mounting `/app/data` (above uses a named volume `dockyard-data`).
+ - **True RBAC:** Per-user container permissions actually work. Grant a user access to only one container's logs and restart button, a feature Portainer restricts to their paid Business Edition.
 
-## Docker Compose example
+ - **OIDC Native:** Designed to work exclusively with OpenID Connect (OIDC) for modern, secure authentication.
 
-```yaml
-version: "3.8"
-services:
-  dockyard:
-    image: ghcr.io/10ij/dockyard:v1.0.1
-    ports:
-      - "8080:80"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - dockyard-data:/app/data
-volumes:
-  dockyard-data:
-```
+Now some nice to have features are missing, like assigning perms based on OIDC groups, but as the app stands, its usable, and meets my needs
+
+## Quick Start (Setup)
+
+The setup has been streamlined to use a configuration script.
+
+1. **Download the essentials:**
+
+   Grab the example.yml and setup.sh from the repository.
+
+1. **Initialize:**
+   ```bash
+   chmod +x setup.sh
+   bash setup.sh```
+
+3. **Configure:**
+
+   Edit the generated config.php to include your OIDC provider details. Detailed guides for GitHub, Google, Discord, Authentik, and Pocket-ID are available at: https://ismailj.eu.org/dockyard/start
 
 ## Features
-- Live container status (HTMX polling).
-- Tail and refresh container logs.
-- Start / stop containers from the UI.
-- Per-user permissions and basic user management.
-- Tiny single-repo app: PHP + SQLite, no external DB required.
 
-## Usage
-- Launch the container (see Quick start).
-- Open the web UI.
-- Default user combo is admin/pass
-- Create users and assign container permissions via the Users pages.
-- Click a container to view logs, status, and use Start / Stop controls.
+ - **Real-time Monitoring:** Live container status and logs via HTMX polling (no heavy WebSockets required).
 
-## Development
-- Very small codebase; HTMX endpoints handle partial updates (logs, status, actions).
-- Data stored in SQLite under `/app/data` inside the container.
-- Recommended for self-hosting and quick local setups; not a replacement for full-featured orchestration UIs.
+ - **Granular Permissions:** Assign Start/Stop/View Log permissions to users on a per-container basis.
+
+ - **OIDC Integration:** Sync users via sub_id. Supports major providers and self-hosted solutions like Authelia or Pocket-ID.
+
+ - **Simple Configuration:** Controlled via config.php. Define admins via OIDC claims or local overrides.
+
+## Security & Scoping
+
+Dockyard interacts directly with `/var/run/docker.sock.`
+
+- It is recommended to run Dockyard behind a reverse proxy (Nginx, Caddy, Traefik).
+
+- Because it uses OIDC, there is no "password database" to leak.
+
+   - This means you can use e.g. your Google login to sign into the app (about that in the guide)
+
+   - Or say if you’re a team, this means you can grant each user from your SSO provider access to only what they need
+
+- The app logic uses a strict "Allowed List" approach for container actions—if a user isn't explicitly granted a permission in the SQLite DB, the backend rejects the Docker Socket command.
+
+## Development & AI Usage
+
+There’s (rightfully) lots of stigma around AI-assisted development, so its probably a good idea to note how AI was used in this project.
+
+- **Minimal & Vetted:** AI was used primarily for UI scaffolding, minor refactors, and improving documentation/comments (like this readme).
+
+- **Hand-Coded Logic:** Most "agentic" code generated by tools like Copilot kinda broke the whole app, so most of it has be rewritten by me.
 
 ## License
 See LICENSE file
