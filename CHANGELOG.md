@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented in this file.
 
-## [1.1.0] - 2026-04-08
+## [1.1.0] - 2026-04-09
 - Major refactor, breaks previous dbs but im the only user anyways
 - Moved from nginx (I had config issues) to FrankenPHP (classic not worker), not a huge performance increase from this alone
 - Optimised the image, previously had opcache at 64mb for a 3mb (rounded up) codebase.
@@ -13,6 +13,7 @@ All notable changes to this project are documented in this file.
 - Fixed non-admins not being able to see anything regardless of perms
 - Moved container details to main viewing page
 - Added a view logs area to the (otherwise useless) settings page
+- Added db backup to cron
 
 ## [1.0.1] - 2026-02-20
 - Bumped version and rebuilt Docker image due to GitHub Actions issues.

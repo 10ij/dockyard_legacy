@@ -57,9 +57,9 @@ Dockyard interacts directly with `/var/run/docker.sock.`
 
 - Because it uses OIDC, there is no "password database" to leak.
 
-   - This means you can use e.g. your Google login to sign into the app (about that in the guide)
+   - This means you can use e.g. your Authentik or Authelia login to sign into the app
 
-   - Or say if you’re a team, this means you can grant each user from your SSO provider access to only what they need
+   - Or say if you’re a team, this means you can grant each user from your SSO provider like AAD or ADFS access to only what they need
 
 - The app logic uses a strict "Allowed List" approach for container actions—if a user isn't explicitly granted a permission in the SQLite DB, the backend rejects the Docker Socket command.
 
