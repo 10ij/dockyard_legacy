@@ -20,6 +20,20 @@ require_once '../includes/auth.php';
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
 
     <style>
+
+        table {
+            width: 100%;
+            table-layout: fixed; /* This forces the table to respect defined widths */
+            border-collapse: collapse;
+        }
+
+        td {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-all; /* Best for long strings like Docker hashes */
+            white-space: normal;
+        }
+
         article {
             max-width: 1400px;
             margin: 0 auto;
@@ -167,7 +181,7 @@ require_once '../includes/auth.php';
                                     <th scope="col">Version</th>
                                     <th scope="col">Status</th>
                                     <th scope="col">Port</th>
-                                    <th scope="col" style="text-align: right;">Management</th>
+                                    <th scope="col">Management</th>
                                 </tr>
                             </thead>
                             <tbody id="container-table-body"
