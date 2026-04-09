@@ -183,12 +183,18 @@ echo "--------------------------" . PHP_EOL;
 $log->purge(LOG_RETENTION_DAYS);
 
 // backup sqlite
+$sourceFile = __DIR__ . '/../data/data.sqlite';
 $backupFile = __DIR__ . "/../data/dockyard_backup_" . date('Ymd_His') . ".sqlite";
-try {
-    copy(__DIR__ . '/../data/dockyard.sqlite', $backupFile);
-    error_log("Database backup created: " . $backupFile);
-    $log->log("Database backup succeeded: " . $backupFile, 'INFO');
-} catch (Exception $e) {
-    error_log("Database backup failed: " . $e->getMessage());
-    $log->log("Database backup failed: " . $e->getMessage(), 'ERROR');
+
+if (file_exists($sourceFile)) {
+    if (copy($sourceFile, $backupFile)) {
+        error_log("Database backup created: " . $backupFile);
+        $log->log("Database backup succeeded: " . $backupFile, 'INFO');
+    } else {
+        error_log("Database backup failed: Could not write to destination.");
+        $log->log("Database backup failed to copy.", 'ERROR');
+    }
+} else {
+    error_log("Database backup failed: Source file not found at " . $sourceFile);
+    $log->log("Source database missing.", 'ERROR');
 }

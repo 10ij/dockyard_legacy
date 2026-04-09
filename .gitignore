@@ -1,6 +1,7 @@
 docs.md
 src/data/db.sqlite
 *.log
+*.sqlite
 .env
 compose.yml
 src/private/config.php
