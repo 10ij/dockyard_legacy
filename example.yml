@@ -8,8 +8,8 @@ services:
     env_file:
       - .env
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - dockyard-data:/app/public/data
+      - /var/run/docker.sock:/var/run/docker.sock
+      - dockyard-data:/app/data
     restart: unless-stopped
 
 volumes:

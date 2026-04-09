@@ -39,7 +39,6 @@ if (empty($name) || !preg_match('/^[a-zA-Z0-9_.-]{1,64}$/', $name)) {
 }
 
 switch ($action) {
-    // http://URL:Port/apps/action.php?action=logs&name=app&lines=2
     case 'logs':
         if (!check_container_permission($db, $user_id, $name, 'view')) {
             respond_error("You do not have permission to view logs for this container");
