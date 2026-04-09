@@ -39,6 +39,18 @@ try {
             box-shadow: var(--pico-card-sectioning-background-color);
         }
         
+        tr[onclick] {
+            cursor: pointer;
+        }
+
+        tr.active i.toggle-icon {
+            transform: rotate(90deg);
+        }
+
+        .toggle-icon {
+            transition: transform 0.2s ease;
+        }
+        
         .header-nav {
             display: flex;
             justify-content: space-between;
@@ -74,6 +86,42 @@ try {
         .action-start { background-color: #50C878; color: white; }
         .action-stop { background-color: #FF6B6B; color: white; }
         .action-logs { background-color: #5DADE2; color: white; }
+
+        /* Log details styling */
+        .log-details {
+            display: none;
+            padding: 1rem;
+            background-color: var(--pico-card-sectioning-background-color);
+            border-bottom: 1px solid var(--pico-table-border-color);
+        }
+        
+        .log-details.active {
+            display: table-row;
+        }
+
+        .log-details td {
+            padding: 0;
+        }
+
+        .log-details-content {
+            padding: 1rem;
+        }
+
+        .log-metadata {
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+            background: #0d1117;
+            color: #d1d5db;
+            padding: 0.75rem;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+
+        .toggle-details {
+            cursor: pointer;
+            color: var(--pico-primary);
+            text-decoration: none;
+        }
 
         /* Modal Overrides for Pico v2 */
         .view-logs-modal { 
@@ -183,6 +231,7 @@ try {
                             <table class="striped">
                                 <thead>
                                     <tr>
+                                        <th style="width: 40px;"></th>
                                         <th scope="col">Time</th>
                                         <th scope="col">Level</th>
                                         <th scope="col">Action</th>
@@ -192,14 +241,46 @@ try {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                <?php foreach ($logs as $row): ?>
-                                    <tr>
+                                <?php foreach ($logs as $row): 
+                                    $logId = (string)($row['ID'] ?? uniqid());
+                                    $metadata = [];
+                                    if (!empty($row['MetadataJson'])) {
+                                        $metadata = json_decode($row['MetadataJson'], true) ?: [];
+                                    }
+                                ?>
+                                    <tr onclick="document.getElementById('details-<?= $logId ?>').classList.toggle('active'); this.classList.toggle('active');">
+                                        <td>
+                                            <i class="fa fa-chevron-right toggle-icon" id="icon-<?= $logId ?>"></i>
+                                        </td>
                                         <td><?= htmlspecialchars((string)($row['CreatedAt'] ?? '')) ?></td>
                                         <td><?= htmlspecialchars((string)($row['Level'] ?? '')) ?></td>
                                         <td><?= htmlspecialchars((string)($row['Action'] ?? '')) ?></td>
                                         <td><?= htmlspecialchars((string)($row['Username'] ?? '')) ?></td>
                                         <td><?= htmlspecialchars((string)($row['ContainerName'] ?? '')) ?></td>
                                         <td><?= htmlspecialchars((string)($row['Message'] ?? '')) ?></td>
+                                    </tr>
+                                    <tr id="details-<?= $logId ?>" class="log-details">
+                                        <td colspan="7">
+                                            <div class="log-details-content">
+                                                <div class="grid">
+                                                    <div>
+                                                        <strong>User Agent:</strong><br>
+                                                        <small><?= htmlspecialchars((string)($row['UserAgent'] ?? 'N/A')) ?></small>
+                                                    </div>
+                                                    <div>
+                                                        <strong>IP Address:</strong><br>
+                                                        <small><?= htmlspecialchars((string)($row['IPAddress'] ?? 'N/A')) ?></small>
+                                                    </div>
+                                                </div>
+                                                
+                                                <?php if (!empty($metadata)): ?>
+                                                    <div style="margin-top: 1rem;">
+                                                        <strong>Extra Metadata:</strong>
+                                                        <pre class="log-metadata"><?= htmlspecialchars(json_encode($metadata, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)) ?></pre>
+                                                    </div>
+                                                <?php endif; ?>
+                                            </div>
+                                        </td>
                                     </tr>
                                 <?php endforeach; ?>
                                 </tbody>
