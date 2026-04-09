@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             case 'update_permissions':
                 if (isset($_POST['container_id'])) {
                     $containerId = intval($_POST['container_id']);
-                    $permissions = $_POST['permissions'];
+                    $permissions = $_POST['permissions'] ?? [];
                     
                     try {
                         // Check if a record already exists
