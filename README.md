@@ -76,3 +76,7 @@ See LICENSE file
 
 ## Changelog
 See CHANGELOG.md
+
+<img width="1409" height="852" alt="{7735E93D-C326-442E-B992-06CD23C2582B}" src="https://github.com/user-attachments/assets/cf4988ab-9588-4ec3-b0d8-1897f9543fcb" />
+<img width="1405" height="843" alt="{440A076C-F5B0-406C-AA04-ACA120E775E3}" src="https://github.com/user-attachments/assets/3d00d782-1c78-4af9-a8ed-1b3b847a2a86" />
+
