@@ -37,7 +37,7 @@ The setup has been streamlined to use a configuration script.
 
 3. **Configure:**
 
-   Edit the generated config.php to include your OIDC provider details. Detailed guides for GitHub, Google, Discord, Authentik, and Pocket-ID are available at: https://ismailj.eu.org/dockyard/start
+   Edit the generated config.php to include your OIDC provider details. 
 
 ## Features
 
