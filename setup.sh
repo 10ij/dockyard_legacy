@@ -19,7 +19,7 @@ echo "[4/5] Installing cron job..."
 (crontab -l 2>/dev/null | grep -F "$CRON_CMD") && {
     echo "Cron already exists, skipping."
 } || {
-    (crontab -l 2>/dev/null; echo "* * * * * $CRON_CMD >> $PROJECT_DIR/cron.log 2>&1") | crontab -
+    (crontab -l 2>/dev/null; echo "0 0 * * * $CRON_CMD >> $PROJECT_DIR/cron.log 2>&1") | crontab -
     echo "Cron installed."
 }
 

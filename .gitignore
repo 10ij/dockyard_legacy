@@ -7,3 +7,4 @@ compose.yml
 src/private/config.php
 src/private/setup.done
 src/private/setup.lock
+/docs

@@ -183,7 +183,7 @@ echo "--------------------------" . PHP_EOL;
 $log->purge(LOG_RETENTION_DAYS);
 
 // backup sqlite
-$sourceFile = __DIR__ . '/../data/data.sqlite';
+$sourceFile = __DIR__ . '/../data/db.sqlite';
 $backupFile = __DIR__ . "/../data/dockyard_backup_" . date('Ymd_His') . ".sqlite";
 
 if (file_exists($sourceFile)) {
