@@ -6,9 +6,6 @@ $db = get_db();
 require_admin();
 
 $username = $_SESSION['username'] ?? '';
-$isAdmin = isset($_SESSION['isAdmin']) && $_SESSION['isAdmin'] === true;
-$user_id = $_SESSION['user_id'] ?? null;
-
 ?>
 <!DOCTYPE html>
 <html data-theme="light">
@@ -200,7 +197,7 @@ $user_id = $_SESSION['user_id'] ?? null;
                                     <i class="fa fa-plug"></i>
                                 </a>';
 
-                            echo '<span class="icon-btn text-danger" onclick="deleteUser(\'' . htmlspecialchars($row['username'], ENT_QUOTES) . '\')" title="Delete User">
+                            echo '<span class="icon-btn text-danger" onclick="deleteUser(' . (int)$row['ID'] . ', \'' . htmlspecialchars($row['username'], ENT_QUOTES) . '\')" title="Delete User">
                                     <i class="fa fa-trash"></i>
                                 </span>';
                         } else {
@@ -224,6 +221,39 @@ $user_id = $_SESSION['user_id'] ?? null;
     <script>
         // Use the CSRF token from PHP
         window.csrfToken = <?php echo json_encode($_SESSION['csrf_token'] ?? ''); ?>;
+
+        // AI Written, JS isnt my strong suit
+        function deleteUser(userId, username) {
+            if (!window.csrfToken) {
+                alert('Security token missing. Refresh the page and try again.');
+                return;
+            }
+
+            const confirmed = confirm('Delete user "' + username + '"? This cannot be undone.');
+            if (!confirmed) {
+                return;
+            }
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = 'users/delete.php';
+
+            const idInput = document.createElement('input');
+            idInput.type = 'hidden';
+            idInput.name = 'user_id';
+            idInput.value = String(userId);
+
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrf_token';
+            csrfInput.value = window.csrfToken;
+
+            form.appendChild(idInput);
+            form.appendChild(csrfInput);
+            document.body.appendChild(form);
+            form.submit();
+        }
+
     </script>
 </body>
 </html>
