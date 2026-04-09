@@ -181,3 +181,14 @@ foreach ($container_statuses as $name => $status) {
 echo "--------------------------" . PHP_EOL;
 
 $log->purge(LOG_RETENTION_DAYS);
+
+// backup sqlite
+$backupFile = __DIR__ . "/../data/dockyard_backup_" . date('Ymd_His') . ".sqlite";
+try {
+    copy(__DIR__ . '/../data/dockyard.sqlite', $backupFile);
+    error_log("Database backup created: " . $backupFile);
+    $log->log("Database backup succeeded: " . $backupFile, 'INFO');
+} catch (Exception $e) {
+    error_log("Database backup failed: " . $e->getMessage());
+    $log->log("Database backup failed: " . $e->getMessage(), 'ERROR');
+}
