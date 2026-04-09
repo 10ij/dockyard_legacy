@@ -79,16 +79,20 @@ $success = false;
 switch ($action) {
     case 'start':
         $result = $docker->start($name);
-        $log->logevent("container.start", "started container", "info", $name);
         $output = $result['output'];
         $success = $result['success'];
+        if ($success) {
+            $log->logevent("container.start", "started container", "info", $name);
+        }
         break;
 
     case 'stop':
         $result = $docker->stop($name);
-        $log->logevent("container.stop", "stopped container", "info", $name);
         $output = $result['output'];
         $success = $result['success'];
+        if ($success) {
+            $log->logevent("container.stop", "stopped container", "info", $name);
+        }
         break;
 
     default:

@@ -7,12 +7,7 @@ if (isset($_SESSION['authenticated']) && $_SESSION['authenticated'] === true) {
     exit;
 }
 
-/**
- * Handle the button click. 
- * We redirect to a script (or the same page) that includes your OIDC auth logic.
- */
 if (isset($_POST['login_oidc'])) {
-    // This file contains the $oidc->authenticate() logic we wrote earlier
     require_once '../includes/auth.php'; 
     exit;
 }

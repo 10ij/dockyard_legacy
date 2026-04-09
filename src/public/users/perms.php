@@ -1,7 +1,13 @@
 <?php
+// No point in seperating logic like I did for apps
+// As the state of apps are obv constanly changing
+// But user permissions are more static
 require_once '../../includes/auth.php';
 require_once '../../includes/functions.php';
 require_once '../../includes/db.php';
+require_once '../../includes/log.php';
+
+$log = new Logger();
 
 $db = get_db();
 
@@ -41,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     } else {
         switch ($_POST['action']) {
             case 'update_permissions':
-                if (isset($_POST['container_id'], $_POST['permissions'])) {
+                if (isset($_POST['container_id'])) {
                     $containerId = intval($_POST['container_id']);
                     $permissions = $_POST['permissions'];
                     
@@ -87,6 +93,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         $stmt->execute();
                         
                         $success_message = "Permissions updated successfully.";
+                        $log->logEvent("permissions.update", "updated container permissions", "info", null, [
+                            'target_user_id' => $userId,
+                            'container_id' => $containerId,
+                            'permissions' => [
+                                'view' => $can_view,
+                                'start' => $can_start,
+                                'stop' => $can_stop,
+                            ],
+                        ]);
                     } catch (PDOException $e) {
                         $error_message = "Database error: " . $e->getMessage();
                     }
@@ -104,11 +119,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         $stmt->bindParam(':id', $permission_id, PDO::PARAM_INT);
                         $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
                         $stmt->execute();
-                        
+
                         if ($stmt->rowCount() === 0) {
                             $error_message = "Permission not found or does not belong to this user.";
                         } else {
                             $success_message = "Permission removed successfully.";
+                            $log->logEvent("permissions.update", "revoked container permissions", "info", null, [
+                                'target_user_id' => $userId,
+                                'permission_id' => $permission_id,
+                            ]);
                         }
                     } catch (PDOException $e) {
                         $error_message = "Database error: " . $e->getMessage();

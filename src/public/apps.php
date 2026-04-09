@@ -5,9 +5,6 @@
 
 require_once '../includes/auth.php';
 
-$isAdmin = isset($_SESSION['isAdmin']) && $_SESSION['isAdmin'] === true;
-$user_id = $_SESSION['user_id'] ?? null;
-
 ?>
 <!DOCTYPE html>
 <html data-theme="light">

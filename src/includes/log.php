@@ -117,6 +117,8 @@ class Logger
 
     /**
      * Clears logs older than X days
+     * @param int $days
+     * @return bool
      */
     public function purge(int $days = 7): bool
     {

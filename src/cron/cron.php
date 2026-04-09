@@ -13,6 +13,7 @@
 
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/log.php';
+require_once __DIR__ . '/../private/config.php';
 
 // Path to the container management script
 $scriptPath = dirname(__DIR__) . '/private/manage_containers.sh';
@@ -287,3 +288,6 @@ if ($check_links) {
     
     echo "</ul>";
 }
+
+$log = new Logger();
+$log->purge(LOG_RETENTION_DAYS);

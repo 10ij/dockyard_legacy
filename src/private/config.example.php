@@ -21,3 +21,5 @@ define('OIDC_PROVIDER_URL', '');
 define('DERIVE_ADMIN_BY_GROUP', false);
 define('OIDC_ADMIN_GROUP', 'dy_admin');
 
+// How long to keep logs in days
+define('LOG_RETENTION_DAYS', 30);
