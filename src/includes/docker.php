@@ -7,15 +7,11 @@
 
 class Docker
 {
-    private string $scriptPath;
-
     public function __construct()
     {
-        $path = realpath(__DIR__ . '/../private/manage_containers.sh');
-        if ($path === false || !file_exists($path)) {
-            throw new RuntimeException('Script not found');
+        if (!file_exists('/var/run/docker.sock')) {
+            error_log('Warning: /var/run/docker.sock not found. The application may not function correctly.');
         }
-        $this->scriptPath = $path;
     }
 
     private function validateName(string $name): string
@@ -23,66 +19,133 @@ class Docker
         if (!preg_match('/^[a-zA-Z0-9_.-]{1,64}$/', $name)) {
             throw new InvalidArgumentException('Invalid container name');
         }
-        return escapeshellarg($name);
+        return $name;
+    }
+
+    private function apiRequest(string $method, string $endpoint, string $query = ''): array
+    {
+        $ch = curl_init();
+        $url = "http://localhost" . $endpoint . ($query ? '?' . $query : '');
+        curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, "/var/run/docker.sock");
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
+        if ($method === 'POST') {
+            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+        }
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        return ['code' => $httpCode, 'body' => (string)$response];
     }
 
     /** @return array{output: string, success: bool} */
     public function start(string $name): array
     {
-        $escapedName = $this->validateName($name);
-        $output = shell_exec("bash {$this->scriptPath} start $escapedName 2>&1") ?: '';
-        $success = strpos($output, $name) !== false || empty(trim($output));
-        return ['output' => $output, 'success' => $success];
+        $name = $this->validateName($name);
+        $res = $this->apiRequest('POST', "/containers/$name/start");
+        return ['output' => $res['body'], 'success' => in_array($res['code'], [204, 304])];
     }
     
     /** @return array{output: string, success: bool} */
     public function stop(string $name): array
     {
-        $escapedName = $this->validateName($name);
-        $output = shell_exec("bash {$this->scriptPath} stop $escapedName 2>&1") ?: '';
-        $success = strpos($output, $name) !== false || empty(trim($output));
-        return ['output' => $output, 'success' => $success];
+        $name = $this->validateName($name);
+        $res = $this->apiRequest('POST', "/containers/$name/stop");
+        return ['output' => $res['body'], 'success' => in_array($res['code'], [204, 304])];
     }
 
     /** @return array{output: string, success: bool} */
     public function logs(string $name, int $lines = 30): array
     {
-        $escapedName = $this->validateName($name);
+        $name = $this->validateName($name);
         $lines = max(1, min($lines, 500));
-        $output = shell_exec("bash {$this->scriptPath} logs $escapedName $lines 2>&1") ?: '';
-        return ['output' => $output, 'success' => true];
+        $res = $this->apiRequest('GET', "/containers/$name/logs", "stdout=true&stderr=true&tail=$lines");
+        
+        $body = $res['body'];
+        if ($res['code'] !== 200) {
+            return ['output' => $body, 'success' => false];
+        }
+
+        // Multiplexing header: 8 bytes (1 byte type, 3 bytes 0, 4 bytes size)
+        $output = '';
+        $len = strlen($body);
+        $i = 0;
+        $isMultiplexed = false;
+
+        if ($len >= 8 && (ord($body[0]) === 1 || ord($body[0]) === 2)) {
+            $isMultiplexed = true;
+            while ($i <= $len - 8) {
+                $type = ord($body[$i]);
+                if ($type !== 1 && $type !== 2) {
+                    $isMultiplexed = false; 
+                    break;
+                }
+                $size = unpack('N', substr($body, $i + 4, 4))[1];
+                if ($i + 8 + $size > $len) {
+                    $isMultiplexed = false; 
+                    break;
+                }
+                $output .= substr($body, $i + 8, $size);
+                $i += 8 + $size;
+            }
+        }
+
+        if (!$isMultiplexed) {
+            $output = $body;
+        }
+
+        return ['output' => trim($output), 'success' => true];
     }
 
     /** @return array{output: string, success: bool} */
     public function status(string $name): array
     {
-        $escapedName = $this->validateName($name);
-        $output = shell_exec("bash {$this->scriptPath} status $escapedName 2>&1") ?: '';
-        return ['output' => $output, 'success' => true];
+        $name = $this->validateName($name);
+        $res = $this->apiRequest('GET', "/containers/$name/json");
+        if ($res['code'] === 200) {
+            $data = json_decode($res['body'], true);
+            return ['output' => $data['State']['Status'] ?? 'unknown', 'success' => true];
+        }
+        return ['output' => 'unknown', 'success' => false];
     }
 
     public function inspect(string $name): array
     {
-        $escapedName = $this->validateName($name);
-        $output = shell_exec("docker inspect $escapedName 2>&1") ?: '';
-        $data = json_decode($output, true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new RuntimeException('Failed to parse Docker inspect output');
+        $name = $this->validateName($name);
+        $res = $this->apiRequest('GET', "/containers/$name/json");
+        if ($res['code'] === 200) {
+            return [json_decode($res['body'], true)];
         }
-        return $data;
-    }
-
-    public function rename(string $oldName, string $newName): array {
-        $escapedOld = $this->validateName($oldName);
-        $escapedNew = $this->validateName($newName);
-        $output = shell_exec("docker rename $escapedOld $escapedNew 2>&1") ?: '';
-        $success = strpos($output, 'Error') === false && empty(trim($output));
-        return ['output' => $output, 'success' => $success];    
+        throw new RuntimeException('Failed to inspect container: ' . $res['body']);
     }
 
     public function list(): array {
-        $output = shell_exec("bash {$this->scriptPath} list 2>&1") ?: '';
-        $containers = explode("\n", $output);
+        $res = $this->apiRequest('GET', "/containers/json", "all=true");
+        if ($res['code'] !== 200) {
+            return [];
+        }
+        $data = json_decode($res['body'], true);
+        if (!is_array($data)) return [];
+        
+        $containers = [];
+        foreach ($data as $c) {
+            $nameStr = ltrim($c['Names'][0] ?? '', '/');
+            $statusStr = $c['Status'] ?? 'unknown';
+            $imageStr = $c['Image'] ?? '';
+            
+            $portsArr = [];
+            foreach ($c['Ports'] ?? [] as $p) {
+                if (isset($p['PublicPort'])) {
+                    $portsArr[] = "0.0.0.0:{$p['PublicPort']}->{$p['PrivatePort']}/{$p['Type']}";
+                } else {
+                    $portsArr[] = "{$p['PrivatePort']}/{$p['Type']}";
+                }
+            }
+            $portStr = implode(', ', $portsArr);
+            
+            $containers[] = "$nameStr,$statusStr,$imageStr,$portStr";
+        }
         return $containers;
     }
 }
