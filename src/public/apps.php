@@ -21,17 +21,37 @@ require_once '../includes/auth.php';
 
     <style>
 
-        table {
-            width: 100%;
-            table-layout: fixed; /* This forces the table to respect defined widths */
-            border-collapse: collapse;
+        /* Allow table to scroll horizontally on small screens only */
+        .overflow-auto {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px; /* Ensures table doesn't get too squished on mobile */
+        }
+
+        td, th {
+            padding: 0.75rem;
+            text-align: left;
+        }
+
+        /* Handle long Docker hashes or versions by allowing them to wrap */
         td {
             word-wrap: break-word;
             overflow-wrap: break-word;
-            word-break: break-all; /* Best for long strings like Docker hashes */
+            word-break: break-all;
             white-space: normal;
+        }
+
+        /* Responsive adjustments */
+        @media (min-width: 992px) {
+            table {
+                table-layout: auto; /* Let it breathe on large screens */
+                min-width: 0;
+            }
         }
 
         article {
