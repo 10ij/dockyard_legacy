@@ -5,7 +5,7 @@
   "require": {
     "jumbojett/openid-connect-php": "^1.0",
     "league/oauth2-client": "^2.9",
-    "phpmailer/phpmailer": "^6.8"
+    "phpmailer/phpmailer": "^7.1"
   },
   "config": {
     "optimize-autoloader": true,
