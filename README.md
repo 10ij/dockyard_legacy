@@ -1,3 +1,7 @@
+## Rewrite
+
+Rewriting in C#
+
 # Dockyard
 
 A dead-simple, ultra-lightweight PHP + SQLite web UI for managing Docker containers. Dockyard isn't an orchestrator; it is a specialized tool for **Logs, Status, and RBAC.**
